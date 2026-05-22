@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Expense Tracker — FY 2026-27</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Playfair+Display:wght@400;600;700&display=swap');
+
+  :root {
+    --bg: #f5f0e8;
+    --surface: #faf7f2;
+    --surface2: #ede8df;
+    --border: #d4cdc0;
+    --border2: #c4bdb0;
+    --ink: #1a1614;
+    --ink2: #4a4440;
+    --muted: #8a8078;
+    --accent: #c4433a;
+    --accent2: #2a6e4a;
+    --accent3: #1a4a7a;
+    --gold: #b8860b;
+    --mono: 'IBM Plex Mono', monospace;
+    --serif: 'Playfair Display', serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--mono);
+    min-height: 100vh;
+    padding: 32px 16px 60px;
+  }
+
+  /* Header */
+  .header {
+    max-width: 860px;
+    margin: 0 auto 32px;
+    text-align: center;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 20px;
+    position: relative;
+  }
+
+  .header::before {
+    content: '◆ EXPENSE LEDGER ◆';
+    display: block;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .header h1 {
+    font-family: var(--serif);
+    font-size: clamp(28px, 6vw, 48px);
+    font-weight: 700;
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+
+  .header-meta {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  /* Month selector */
+  .controls {
+    max-width: 860px;
+    margin: 0 auto 24px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .month-btn {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 6px 12px;
+    border: 1px solid var(--border2);
+    background: var(--surface);
+    color: var(--ink2);
+    cursor: pointer;
+    transition: all 0.15s;
+    border-radius: 2px;
+  }
+
+  .month-btn:hover { background: var(--surface2); }
+  .month-btn.active {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+
+  /* Summary strip */
+  .summary-strip {
+    max-width: 860px;
+    margin: 0 auto 24px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border2);
+  }
+
+  .summary-item {
+    background: var(--surface);
+    padding: 14px 16px;
+    text-align: center;
+  }
+
+  .summary-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .summary-value {
+    font-size: 18px;
+    font-weight: 600;
+    font-family: var(--serif);
+  }
+
+  .summary-value.income { color: var(--accent2); }
+  .summary-value.expense { color: var(--accent); }
+  .summary-value.deductible { color: var(--accent3); }
+  .summary-value.savings { color: var(--gold); }
+
+  /* Add expense form */
+  .add-section {
+    max-width: 860px;
+    margin: 0 auto 24px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    padding: 20px;
+  }
+
+  .add-title {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .add-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 100px 1fr 120px 140px 80px;
+    gap: 8px;
+    align-items: end;
+  }
+
+  @media (max-width: 640px) {
+    .form-row {
+      grid-template-columns: 1fr 1fr;
+    }
+    .form-row .btn-add { grid-column: 1 / -1; }
+  }
+
+  .field { display: flex; flex-direction: column; gap: 4px; }
+
+  label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  input, select {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 8px 10px;
+    border: 1px solid var(--border2);
+    background: var(--bg);
+    color: var(--ink);
+    outline: none;
+    border-radius: 2px;
+    width: 100%;
+    transition: border-color 0.15s;
+  }
+
+  input:focus, select:focus { border-color: var(--ink); }
+
+  .btn-add {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 9px 16px;
+    background: var(--ink);
+    color: var(--bg);
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+
+  .btn-add:hover { opacity: 0.8; }
+
+  /* Expense table */
+  .table-section {
+    max-width: 860px;
+    margin: 0 auto 24px;
+  }
+
+  .category-block { margin-bottom: 20px; }
+
+  .category-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    margin-bottom: 1px;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .cat-ev { background: #e8f0e8; color: var(--accent2); border-left: 3px solid var(--accent2); }
+  .cat-tech { background: #e8ecf4; color: var(--accent3); border-left: 3px solid var(--accent3); }
+  .cat-travel { background: #f4e8e8; color: var(--accent); border-left: 3px solid var(--accent); }
+  .cat-office { background: #f4f0e0; color: var(--gold); border-left: 3px solid var(--gold); }
+  .cat-professional { background: #ede8f4; color: #6a3a8a; border-left: 3px solid #6a3a8a; }
+  .cat-other { background: var(--surface2); color: var(--muted); border-left: 3px solid var(--border2); }
+
+  .cat-total {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  table.expense-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+
+  table.expense-table th {
+    text-align: left;
+    padding: 8px 12px;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+  }
+
+  table.expense-table th.right { text-align: right; }
+
+  table.expense-table td {
+    padding: 9px 12px;
+    border-bottom: 1px solid rgba(212,205,192,0.4);
+    vertical-align: middle;
+  }
+
+  table.expense-table tr:last-child td { border-bottom: none; }
+  table.expense-table tr:hover td { background: var(--surface2); }
+
+  .td-right { text-align: right; }
+  .td-amount { font-weight: 600; text-align: right; }
+
+  .badge {
+    display: inline-block;
+    font-size: 9px;
+    letter-spacing: 1px;
+    padding: 2px 7px;
+    border-radius: 2px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .badge-yes { background: #d4ead9; color: var(--accent2); }
+  .badge-no { background: #f0e0e0; color: var(--accent); }
+  .badge-partial { background: #e8e4d0; color: var(--gold); }
+
+  .delete-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 6px;
+    border-radius: 2px;
+    transition: all 0.15s;
+    font-family: var(--mono);
+  }
+
+  .delete-btn:hover { color: var(--accent); background: #f0e0e0; }
+
+  .empty-state {
+    padding: 24px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 1px;
+    background: var(--surface);
+    border: 1px dashed var(--border2);
+  }
+
+  /* Annual summary */
+  .annual-section {
+    max-width: 860px;
+    margin: 0 auto 24px;
+    border: 1px solid var(--border2);
+    background: var(--surface);
+  }
+
+  .annual-header {
+    padding: 12px 16px;
+    background: var(--ink);
+    color: var(--bg);
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  .annual-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    font-size: 11px;
+    overflow-x: auto;
+  }
+
+  .annual-cell {
+    padding: 10px 8px;
+    text-align: center;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .annual-cell:last-child { border-right: none; }
+  .annual-cell.header-cell {
+    background: var(--surface2);
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .annual-cell.month-name {
+    text-align: left;
+    font-weight: 600;
+    color: var(--ink);
+    font-size: 11px;
+  }
+
+  .green-val { color: var(--accent2); font-weight: 600; }
+  .red-val { color: var(--accent); font-weight: 600; }
+  .blue-val { color: var(--accent3); font-weight: 600; }
+
+  /* Trip log */
+  .trip-section {
+    max-width: 860px;
+    margin: 0 auto 24px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    padding: 20px;
+  }
+
+  .trip-form {
+    display: grid;
+    grid-template-columns: 100px 1fr 1fr 80px 80px;
+    gap: 8px;
+    margin-bottom: 16px;
+    align-items: end;
+  }
+
+  @media (max-width: 640px) {
+    .trip-form { grid-template-columns: 1fr 1fr; }
+    .trip-form .btn-add { grid-column: 1 / -1; }
+  }
+
+  .trip-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+
+  .trip-table th {
+    text-align: left;
+    padding: 6px 10px;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .trip-table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid rgba(212,205,192,0.4);
+  }
+
+  .trip-table tr:last-child td { border-bottom: none; }
+
+  /* Footer */
+  .footer {
+    max-width: 860px;
+    margin: 0 auto;
+    text-align: center;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+
+  /* GST Section */
+  .gst-section {
+    max-width: 860px;
+    margin: 0 auto 24px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+  }
+
+  .gst-header-bar {
+    padding: 12px 16px;
+    background: #1a3a5a;
+    color: #a8d4f0;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .gst-header-bar span { font-size: 11px; color: #fff; font-weight: 600; }
+
+  .gst-summary-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border-bottom: 1px solid var(--border2);
+  }
+
+  .gst-summary-item {
+    background: var(--surface);
+    padding: 12px 14px;
+    text-align: center;
+  }
+
+  .gst-val { font-size: 16px; font-weight: 600; font-family: var(--serif); }
+  .gst-collected-val { color: var(--accent2); }
+  .gst-itc-val { color: var(--accent3); }
+  .gst-payable-val { color: var(--accent); }
+  .gst-saved-val { color: var(--gold); }
+
+  .gst-body { padding: 20px; }
+
+  .gst-form-row {
+    display: grid;
+    grid-template-columns: 100px 1fr 100px 80px 120px 80px;
+    gap: 8px;
+    align-items: end;
+    margin-bottom: 16px;
+  }
+
+  @media (max-width: 640px) {
+    .gst-form-row { grid-template-columns: 1fr 1fr; }
+    .gst-form-row .btn-add { grid-column: 1 / -1; }
+    .gst-summary-strip { grid-template-columns: repeat(2,1fr); }
+  }
+
+  .gst-itc-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    border: 1px solid var(--border);
+  }
+
+  .gst-itc-table th {
+    padding: 7px 10px;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+  }
+
+  .gst-itc-table th.right { text-align: right; }
+
+  .gst-itc-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(212,205,192,0.4);
+    vertical-align: middle;
+  }
+
+  .gst-itc-table tr:last-child td { border-bottom: none; }
+  .gst-itc-table tr:hover td { background: var(--surface2); }
+
+  .itc-badge-yes { background: #d4ead9; color: var(--accent2); }
+  .itc-badge-no  { background: #f0e0e0; color: var(--accent); }
+
+  .gst-rule-box {
+    margin-top: 16px;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent3);
+    padding: 12px 14px;
+    background: #f0f4fa;
+  }
+
+  .gst-rule-title {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent3);
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  .gst-rules {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 4px;
+  }
+
+  .gst-rule-item {
+    font-size: 11px;
+    color: var(--ink2);
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+    padding: 3px 0;
+  }
+
+  .gst-rule-item .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+
+  .gst-filing-bar {
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 8px;
+  }
+
+  .gst-filing-card {
+    border: 1px solid var(--border);
+    padding: 10px 12px;
+    background: var(--bg);
+    border-radius: 2px;
+  }
+
+  .gst-filing-due {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 1px;
+    margin-bottom: 3px;
+  }
+
+  .gst-filing-what {
+    font-size: 11px;
+    color: var(--ink2);
+  }
+
+  /* Toaster */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--ink);
+    color: var(--bg);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 10px 18px;
+    border-radius: 2px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s;
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  .toast.show { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Expense Tracker FY 2026–27</h1>
+  <div class="header-meta">
+    <span>VELKUR CONSULTING</span>
+    <span>·</span>
+    <span>₹43,00,000 ANNUAL FEE</span>
+    <span>·</span>
+    <span>INDIVIDUAL CONSULTANT</span>
+  </div>
+</div>
+
+<!-- Month Selector -->
+<div class="controls" id="monthControls"></div>
+
+<!-- Summary Strip -->
+<div class="summary-strip">
+  <div class="summary-item">
+    <div class="summary-label">Total Expenses</div>
+    <div class="summary-value expense" id="totalExpenses">₹0</div>
+  </div>
+  <div class="summary-item">
+    <div class="summary-label">Deductible</div>
+    <div class="summary-value deductible" id="totalDeductible">₹0</div>
+  </div>
+  <div class="summary-item">
+    <div class="summary-label">Tax Saved (~30%)</div>
+    <div class="summary-value savings" id="taxSaved">₹0</div>
+  </div>
+  <div class="summary-item">
+    <div class="summary-label">Receipts Logged</div>
+    <div class="summary-value income" id="receiptCount">0</div>
+  </div>
+</div>
+
+<!-- Add Expense -->
+<div class="add-section">
+  <div class="add-title">Add Expense</div>
+  <div class="form-row">
+    <div class="field">
+      <label>Date</label>
+      <input type="date" id="expDate">
+    </div>
+    <div class="field">
+      <label>Description</label>
+      <input type="text" id="expDesc" placeholder="e.g. ICICI EMI interest portion">
+    </div>
+    <div class="field">
+      <label>Category</label>
+      <select id="expCat">
+        <option value="ev">🚗 EV / Car</option>
+        <option value="tech">💻 Tech & Comm</option>
+        <option value="travel">✈️ Travel</option>
+        <option value="office">🏠 Office / Home</option>
+        <option value="professional">📋 Professional</option>
+        <option value="other">• Other</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Amount (₹)</label>
+      <input type="number" id="expAmount" placeholder="0">
+    </div>
+    <div class="field">
+      <label>Deductible</label>
+      <select id="expDed">
+        <option value="yes">Yes — Full</option>
+        <option value="partial">Partial (60%)</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    <button class="btn-add" onclick="addExpense()">+ ADD</button>
+  </div>
+</div>
+
+<!-- Expense Tables by Category -->
+<div class="table-section" id="expenseTables"></div>
+
+<!-- Trip Log -->
+<div class="trip-section">
+  <div class="add-title">EV Trip Log</div>
+  <div class="trip-form">
+    <div class="field">
+      <label>Date</label>
+      <input type="date" id="tripDate">
+    </div>
+    <div class="field">
+      <label>From → To</label>
+      <input type="text" id="tripRoute" placeholder="Home → Velkur office">
+    </div>
+    <div class="field">
+      <label>Purpose / Client</label>
+      <input type="text" id="tripPurpose" placeholder="Strategy review meeting">
+    </div>
+    <div class="field">
+      <label>KM</label>
+      <input type="number" id="tripKm" placeholder="0">
+    </div>
+    <button class="btn-add" onclick="addTrip()">+ LOG</button>
+  </div>
+  <div id="tripTableWrap"></div>
+</div>
+
+<!-- GST ITC Tracker -->
+<div class="gst-section">
+  <div class="gst-header-bar">
+    GST Input Tax Credit Tracker
+    <span id="gstMonthLabel">Apr 2026</span>
+  </div>
+  <div class="gst-summary-strip">
+    <div class="gst-summary-item">
+      <div class="summary-label">GST Collected</div>
+      <div class="gst-val gst-collected-val" id="gstCollected">₹64,500</div>
+      <div style="font-size:9px;color:var(--muted);margin-top:3px">18% on ₹3,58,333</div>
+    </div>
+    <div class="gst-summary-item">
+      <div class="summary-label">ITC Available</div>
+      <div class="gst-val gst-itc-val" id="gstITC">₹0</div>
+      <div style="font-size:9px;color:var(--muted);margin-top:3px">from purchases</div>
+    </div>
+    <div class="gst-summary-item">
+      <div class="summary-label">Net Payable</div>
+      <div class="gst-val gst-payable-val" id="gstPayable">₹64,500</div>
+      <div style="font-size:9px;color:var(--muted);margin-top:3px">collected − ITC</div>
+    </div>
+    <div class="gst-summary-item">
+      <div class="summary-label">ITC Saved</div>
+      <div class="gst-val gst-saved-val" id="gstSaved">₹0</div>
+      <div style="font-size:9px;color:var(--muted);margin-top:3px">cash benefit</div>
+    </div>
+  </div>
+  <div class="gst-body">
+    <div class="add-title">Log GST Purchase (ITC Entry)</div>
+    <div class="gst-form-row">
+      <div class="field"><label>Date</label><input type="date" id="gstDate"></div>
+      <div class="field"><label>Vendor / Description</label><input type="text" id="gstDesc" placeholder="e.g. Dell laptop — business use"></div>
+      <div class="field"><label>Base Amount ₹</label><input type="number" id="gstBase" placeholder="0"></div>
+      <div class="field"><label>GST %</label>
+        <select id="gstRate">
+          <option value="18">18%</option>
+          <option value="12">12%</option>
+          <option value="5">5%</option>
+          <option value="28">28%</option>
+        </select>
+      </div>
+      <div class="field"><label>ITC Eligible?</label>
+        <select id="gstEligible">
+          <option value="yes">✅ Yes — Claimable</option>
+          <option value="no">❌ No — Blocked</option>
+        </select>
+      </div>
+      <button class="btn-add" onclick="addGSTEntry()">+ ADD</button>
+    </div>
+    <div id="gstTableWrap"></div>
+    <div class="gst-rule-box">
+      <div class="gst-rule-title">ITC Quick Reference — What's Claimable</div>
+      <div class="gst-rules">
+        <div class="gst-rule-item"><div class="dot" style="background:var(--accent2)"></div>Laptop / computer equipment ✅</div>
+        <div class="gst-rule-item"><div class="dot" style="background:var(--accent2)"></div>Software subscriptions (B2B) ✅</div>
+        <div class="gst-rule-item"><div class="dot" style="background:var(--accent2)"></div>CA / legal fees ✅</div>
+        <div class="gst-rule-item"><div class="dot" style="background:var(--accent2)"></div>Office supplies & stationery ✅</div>
+        <div class="gst-rule-item"><div class="dot" style="background:var(--accent2)"></div>Business travel — hotels, flights ✅</div>
+        <div class="gst-rule-item"><div class="dot" style="background:var(--accent2)"></div>Mobile / internet (business %) ✅</div>
+        <div class="gst-rule-item"><div class="dot" style="background:var(--accent)"></div>Gym / fitness memberships ❌</div>
+        <div class="gst-rule-item"><div class="dot" style="background:var(--accent)"></div>Car purchase (personal name) ❌</div>
+        <div class="gst-rule-item"><div class="dot" style="background:var(--accent)"></div>Personal food / entertainment ❌</div>
+        <div class="gst-rule-item"><div class="dot" style="background:var(--accent)"></div>Club memberships ❌</div>
+      </div>
+    </div>
+    <div class="gst-filing-bar">
+      <div class="gst-filing-card"><div class="gst-filing-due">10th of each month</div><div class="gst-filing-what">GSTR-1 — Sales / invoices filed</div></div>
+      <div class="gst-filing-card"><div class="gst-filing-due">20th of each month</div><div class="gst-filing-what">GSTR-3B — Net GST payment + ITC claim</div></div>
+      <div class="gst-filing-card"><div class="gst-filing-due">Invoice to Velkur</div><div class="gst-filing-what">₹3,58,333 + 18% = ₹4,22,833/month</div></div>
+      <div class="gst-filing-card"><div class="gst-filing-due">Keep separately</div><div class="gst-filing-what">GST collected ≠ your income. Park in separate a/c</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Annual Summary -->
+<div class="annual-section">
+  <div class="annual-header">Annual Overview — All 12 Months</div>
+  <div class="annual-grid" id="annualGrid"></div>
+</div>
+
+<div class="footer">
+  Data stored locally in your browser · Export by printing (Ctrl+P) · Consult CA for final ITR filing
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const MONTHS = [
+  {key:'apr26',label:'Apr 2026',short:'APR'},
+  {key:'may26',label:'May 2026',short:'MAY'},
+  {key:'jun26',label:'Jun 2026',short:'JUN'},
+  {key:'jul26',label:'Jul 2026',short:'JUL'},
+  {key:'aug26',label:'Aug 2026',short:'AUG'},
+  {key:'sep26',label:'Sep 2026',short:'SEP'},
+  {key:'oct26',label:'Oct 2026',short:'OCT'},
+  {key:'nov26',label:'Nov 2026',short:'NOV'},
+  {key:'dec26',label:'Dec 2026',short:'DEC'},
+  {key:'jan27',label:'Jan 2027',short:'JAN'},
+  {key:'feb27',label:'Feb 2027',short:'FEB'},
+  {key:'mar27',label:'Mar 2027',short:'MAR'},
+];
+
+const CATS = {
+  ev:           {label:'EV / Car',         cls:'cat-ev'},
+  tech:         {label:'Tech & Comm',       cls:'cat-tech'},
+  travel:       {label:'Travel',            cls:'cat-travel'},
+  office:       {label:'Office / Home',     cls:'cat-office'},
+  professional: {label:'Professional Svcs', cls:'cat-professional'},
+  other:        {label:'Other',             cls:'cat-other'},
+};
+
+// Prefill useful EV defaults for April
+const PREFILL = {
+  apr26: [
+    {id:'pre1', date:'2026-04-01', desc:'ICICI EV Loan — Interest Portion (est.)', cat:'ev', amount:15000, ded:'partial'},
+    {id:'pre2', date:'2026-04-01', desc:'EV Home Charging — Electricity', cat:'ev', amount:2500, ded:'partial'},
+  ]
+};
+
+let currentMonth = 'apr26';
+let data = {};
+
+function loadData() {
+  try { data = JSON.parse(localStorage.getItem('fy2627_expenses') || '{}'); } catch(e) { data = {}; }
+  MONTHS.forEach(m => {
+    if (!data[m.key]) data[m.key] = { expenses: [], trips: [] };
+    if (!data[m.key].trips) data[m.key].trips = [];
+    // inject prefill if empty
+    if (data[m.key].expenses.length === 0 && PREFILL[m.key]) {
+      data[m.key].expenses = JSON.parse(JSON.stringify(PREFILL[m.key]));
+    }
+  });
+}
+
+function saveData() {
+  localStorage.setItem('fy2627_expenses', JSON.stringify(data));
+}
+
+function fmt(n) {
+  return '₹' + Math.round(n).toLocaleString('en-IN');
+}
+
+function deductibleAmount(amount, ded) {
+  if (ded === 'yes') return amount;
+  if (ded === 'partial') return amount * 0.6;
+  return 0;
+}
+
+function buildMonthControls() {
+  const wrap = document.getElementById('monthControls');
+  wrap.innerHTML = MONTHS.map(m =>
+    `<button class="month-btn ${m.key===currentMonth?'active':''}" onclick="switchMonth('${m.key}')">${m.short}</button>`
+  ).join('');
+}
+
+function switchMonth(key) {
+  currentMonth = key;
+  buildMonthControls();
+  render();
+  renderGST();
+}
+
+function render() {
+  renderSummary();
+  renderTables();
+  renderTrips();
+  renderAnnual();
+}
+
+function renderSummary() {
+  const exps = data[currentMonth].expenses;
+  const total = exps.reduce((s,e)=>s+e.amount,0);
+  const ded = exps.reduce((s,e)=>s+deductibleAmount(e.amount,e.ded),0);
+  document.getElementById('totalExpenses').textContent = fmt(total);
+  document.getElementById('totalDeductible').textContent = fmt(ded);
+  document.getElementById('taxSaved').textContent = fmt(ded * 0.3);
+  document.getElementById('receiptCount').textContent = exps.length;
+}
+
+function renderTables() {
+  const wrap = document.getElementById('expenseTables');
+  const exps = data[currentMonth].expenses;
+  let html = '';
+
+  Object.keys(CATS).forEach(cat => {
+    const items = exps.filter(e=>e.cat===cat);
+    const catTotal = items.reduce((s,e)=>s+e.amount,0);
+    const catDed = items.reduce((s,e)=>s+deductibleAmount(e.amount,e.ded),0);
+    const info = CATS[cat];
+
+    html += `<div class="category-block">
+      <div class="category-header ${info.cls}">
+        ${info.label}
+        ${items.length > 0 ? `<span class="cat-total">${fmt(catTotal)} · deductible ${fmt(catDed)}</span>` : ''}
+      </div>`;
+
+    if (items.length === 0) {
+      html += `<div class="empty-state">No entries for ${info.label} this month</div>`;
+    } else {
+      html += `<table class="expense-table">
+        <thead><tr>
+          <th>Date</th><th>Description</th>
+          <th class="right">Amount</th><th class="right">Deductible</th><th class="right">Tax Save</th><th></th>
+        </tr></thead><tbody>`;
+      items.forEach(e => {
+        const ded = deductibleAmount(e.amount, e.ded);
+        const badge = e.ded === 'yes' ? '<span class="badge badge-yes">Full</span>'
+          : e.ded === 'partial' ? '<span class="badge badge-partial">60%</span>'
+          : '<span class="badge badge-no">No</span>';
+        html += `<tr>
+          <td style="color:var(--muted);font-size:11px">${e.date}</td>
+          <td>${e.desc}</td>
+          <td class="td-amount">${fmt(e.amount)}</td>
+          <td class="td-right">${badge} ${fmt(ded)}</td>
+          <td class="td-amount" style="color:var(--gold)">${fmt(ded*0.3)}</td>
+          <td><button class="delete-btn" onclick="deleteExp('${e.id}')">×</button></td>
+        </tr>`;
+      });
+      html += `</tbody></table>`;
+    }
+    html += `</div>`;
+  });
+
+  wrap.innerHTML = html;
+}
+
+function renderTrips() {
+  const trips = data[currentMonth].trips || [];
+  const wrap = document.getElementById('tripTableWrap');
+  if (trips.length === 0) {
+    wrap.innerHTML = `<div class="empty-state">No trips logged this month</div>`;
+    return;
+  }
+  const totalKm = trips.reduce((s,t)=>s+(+t.km||0),0);
+  wrap.innerHTML = `<table class="trip-table">
+    <thead><tr>
+      <th>Date</th><th>Route</th><th>Purpose</th><th style="text-align:right">KM</th><th></th>
+    </tr></thead>
+    <tbody>
+      ${trips.map(t=>`<tr>
+        <td style="color:var(--muted)">${t.date}</td>
+        <td>${t.route}</td>
+        <td>${t.purpose}</td>
+        <td style="text-align:right">${t.km}</td>
+        <td><button class="delete-btn" onclick="deleteTrip('${t.id}')">×</button></td>
+      </tr>`).join('')}
+    </tbody>
+    <tfoot><tr>
+      <td colspan="3" style="font-size:10px;color:var(--muted);padding:8px 10px">TOTAL KM THIS MONTH</td>
+      <td style="text-align:right;font-weight:600;padding:8px 10px">${totalKm} km</td><td></td>
+    </tr></tfoot>
+  </table>`;
+}
+
+function renderAnnual() {
+  const grid = document.getElementById('annualGrid');
+  const headers = ['MONTH','EXPENSES','DEDUCTIBLE','TAX SAVE','GST ITC','RECEIPTS'];
+  let html = headers.map(h=>`<div class="annual-cell header-cell">${h}</div>`).join('');
+
+  MONTHS.forEach(m => {
+    const exps = data[m.key].expenses;
+    const trips = data[m.key].trips || [];
+    const gst = data[m.key].gst || [];
+    const total = exps.reduce((s,e)=>s+e.amount,0);
+    const ded = exps.reduce((s,e)=>s+deductibleAmount(e.amount,e.ded),0);
+    const itc = gst.filter(e=>e.eligible==='yes').reduce((s,e)=>s+(e.base*(e.rate/100)),0);
+    html += `
+      <div class="annual-cell month-name">${m.short}</div>
+      <div class="annual-cell red-val">${total>0?fmt(total):'—'}</div>
+      <div class="annual-cell blue-val">${ded>0?fmt(ded):'—'}</div>
+      <div class="annual-cell green-val">${ded>0?fmt(ded*0.3):'—'}</div>
+      <div class="annual-cell" style="color:var(--accent3);font-weight:600">${itc>0?fmt(itc):'—'}</div>
+      <div class="annual-cell">${exps.length>0?exps.length:'—'}</div>
+    `;
+  });
+
+  grid.innerHTML = html;
+}
+
+function addExpense() {
+  const date = document.getElementById('expDate').value;
+  const desc = document.getElementById('expDesc').value.trim();
+  const cat = document.getElementById('expCat').value;
+  const amount = parseFloat(document.getElementById('expAmount').value);
+  const ded = document.getElementById('expDed').value;
+
+  if (!date || !desc || !amount || amount <= 0) {
+    showToast('Please fill date, description and amount');
+    return;
+  }
+
+  data[currentMonth].expenses.push({
+    id: 'e' + Date.now(),
+    date, desc, cat, amount, ded
+  });
+
+  saveData();
+  render();
+
+  document.getElementById('expDesc').value = '';
+  document.getElementById('expAmount').value = '';
+  showToast('Expense added ✓');
+}
+
+function deleteExp(id) {
+  data[currentMonth].expenses = data[currentMonth].expenses.filter(e=>e.id!==id);
+  saveData();
+  render();
+}
+
+function addTrip() {
+  const date = document.getElementById('tripDate').value;
+  const route = document.getElementById('tripRoute').value.trim();
+  const purpose = document.getElementById('tripPurpose').value.trim();
+  const km = document.getElementById('tripKm').value;
+
+  if (!date || !route || !purpose) {
+    showToast('Please fill date, route and purpose');
+    return;
+  }
+
+  if (!data[currentMonth].trips) data[currentMonth].trips = [];
+  data[currentMonth].trips.push({ id:'t'+Date.now(), date, route, purpose, km: km||0 });
+
+  saveData();
+  render();
+
+  document.getElementById('tripRoute').value = '';
+  document.getElementById('tripPurpose').value = '';
+  document.getElementById('tripKm').value = '';
+  showToast('Trip logged ✓');
+}
+
+function deleteTrip(id) {
+  data[currentMonth].trips = (data[currentMonth].trips||[]).filter(t=>t.id!==id);
+  saveData();
+  render();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2000);
+}
+
+// Set today's date as default
+function setDefaultDates() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('expDate').value = today;
+  document.getElementById('tripDate').value = today;
+}
+
+// GST monthly collected (fixed at ₹64,500 per month = 18% of ₹3,58,333)
+const GST_MONTHLY = 64500;
+
+function renderGST() {
+  const entries = (data[currentMonth].gst || []);
+  const itcTotal = entries.filter(e=>e.eligible==='yes').reduce((s,e)=>s+(e.base*(e.rate/100)),0);
+  const netPayable = Math.max(0, GST_MONTHLY - itcTotal);
+  const saved = Math.min(itcTotal, GST_MONTHLY);
+
+  document.getElementById('gstCollected').textContent = fmt(GST_MONTHLY);
+  document.getElementById('gstITC').textContent = fmt(itcTotal);
+  document.getElementById('gstPayable').textContent = fmt(netPayable);
+  document.getElementById('gstSaved').textContent = fmt(saved);
+  document.getElementById('gstMonthLabel').textContent = MONTHS.find(m=>m.key===currentMonth)?.label || '';
+
+  const wrap = document.getElementById('gstTableWrap');
+  if (entries.length === 0) {
+    wrap.innerHTML = `<div class="empty-state" style="margin-top:0">No GST purchases logged this month</div>`;
+    return;
+  }
+
+  wrap.innerHTML = `<table class="gst-itc-table" style="margin-top:0">
+    <thead><tr>
+      <th>Date</th><th>Vendor / Description</th>
+      <th class="right">Base Amt</th><th class="right">GST %</th>
+      <th class="right">GST Amt</th><th class="right">ITC?</th><th></th>
+    </tr></thead>
+    <tbody>
+      ${entries.map(e=>{
+        const gstAmt = e.base * (e.rate/100);
+        const badge = e.eligible==='yes'
+          ? '<span class="badge itc-badge-yes">Claimable</span>'
+          : '<span class="badge itc-badge-no">Blocked</span>';
+        return `<tr>
+          <td style="color:var(--muted);font-size:11px">${e.date}</td>
+          <td>${e.desc}</td>
+          <td class="td-amount">${fmt(e.base)}</td>
+          <td style="text-align:right;color:var(--muted)">${e.rate}%</td>
+          <td class="td-amount" style="color:var(--accent3)">${fmt(gstAmt)}</td>
+          <td style="text-align:right">${badge}</td>
+          <td><button class="delete-btn" onclick="deleteGST('${e.id}')">×</button></td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+    <tfoot>
+      <tr style="background:var(--surface2)">
+        <td colspan="4" style="padding:8px 10px;font-size:10px;color:var(--muted)">TOTAL ITC THIS MONTH</td>
+        <td class="td-amount" style="color:var(--accent3);padding:8px 10px">${fmt(itcTotal)}</td>
+        <td colspan="2"></td>
+      </tr>
+    </tfoot>
+  </table>`;
+}
+
+function addGSTEntry() {
+  const date = document.getElementById('gstDate').value;
+  const desc = document.getElementById('gstDesc').value.trim();
+  const base = parseFloat(document.getElementById('gstBase').value);
+  const rate = parseInt(document.getElementById('gstRate').value);
+  const eligible = document.getElementById('gstEligible').value;
+
+  if (!date || !desc || !base || base <= 0) {
+    showToast('Please fill date, description and amount');
+    return;
+  }
+
+  if (!data[currentMonth].gst) data[currentMonth].gst = [];
+  data[currentMonth].gst.push({ id:'g'+Date.now(), date, desc, base, rate, eligible });
+
+  saveData();
+  renderGST();
+  renderAnnual();
+
+  document.getElementById('gstDesc').value = '';
+  document.getElementById('gstBase').value = '';
+  showToast('GST entry added ✓');
+}
+
+function deleteGST(id) {
+  data[currentMonth].gst = (data[currentMonth].gst||[]).filter(e=>e.id!==id);
+  saveData();
+  renderGST();
+  renderAnnual();
+}
+
+// Init
+loadData();
+buildMonthControls();
+setDefaultDates();
+document.getElementById('gstDate').value = new Date().toISOString().split('T')[0];
+render();
+renderGST();
+</script>
+</body>
+</html>
